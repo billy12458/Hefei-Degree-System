@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.school.springboot.mapper.DegreeMapper">
+
+    <!--推荐后端对身份证号脱敏-->
+    <sql id="degree_select_1">
+        degreeId,address,zone,occupied,identity,startDate,studentName
+    </sql>
+
+    <sql id="school_select_1">
+        degreeId,address,zone,occupied,startDate,school,studentName
+    </sql>
+
+    <sql id="identity_select">
+        identity
+    </sql>
+
+    <sql id="name_select">
+        schoolName
+    </sql>
+
+    <cache eviction="LRU" flushInterval="1200000" size="1024" readOnly="false"></cache>
+
+    <select id="getDegreeBySearch" useCache="true" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="school_select_1"/> FROM degree WHERE studentName = #{studentName} AND identity = #{identity} 
+    </select>
+
+    <select id="getDegreeByDegreeId1" useCache="false" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="school_select_1"/> FROM degree WHERE degreeId = #{degreeId}
+    </select>
+
+    <select id="getDegreeByAddressSearch" useCache="true" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="school_select_1"/> FROM degree WHERE degreeId = #{degreeId} AND address = #{address}
+    </select>
+
+    <select id="getAllSchools" useCache="true" timeout="3000" resultType="com.school.springboot.entity.School">
+        SELECT DISTINCT <include refid="name_select"/> FROM district
+    </select>
+
+    <select id="getAllDegrees" useCache="true" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="school_select_1"/> FROM degree
+    </select>
+
+    <insert id="addDegree" flushCache="true" parameterType="com.school.springboot.entity.Degree" useGeneratedKeys="false" keyProperty="degreeId">
+        INSERT INTO degree(degreeId,address,zone,occupied,identity,startDate,school,studentName,status) VALUES (#{degreeId}, #{address}, #{zone}, #{occupied}, #{identity}, #{startDate}, #{school}, #{studentName}, #{status})
+    </insert>
+
+    <delete id="deleteDegreeById" flushCache="true" statementType="PREPARED" timeout="3000">
+        UPDATE degree SET status = 3 WHERE degreeId = #{degreeId} and identity = #{identity}
+    </delete>
+
+    <update id="postponeGraduation" flushCache="true" parameterType="com.school.springboot.dto.PostponeDTO" statementType="PREPARED">
+        UPDATE degree SET startDate = #{startDate} WHERE identity = #{identity}
+    </update>
+
+    <update id="changeSchoolSingle" flushCache="true" parameterType="com.school.springboot.dto.ChangeDTO" statementType="PREPARED">
+        UPDATE degree SET status = 2, school = #{destSchoolName} WHERE degreeId = #{degreeId} AND identity = #{identity}
+    </update>
+
+    <update id="agreeChangeSchool" flushCache="true" parameterType="com.school.springboot.dto.AgreeDTO" statementType="PREPARED">
+        UPDATE degree SET status = 0 WHERE degreeId = #{degreeId}
+    </update>
+
+    <select id="getDegreeByIdentity" useCache="false" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="degree_select_1"/> FROM degree WHERE identity = #{identity}
+    </select>
+
+    <select id="getUnauditedDegrees" useCache="true" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="school_select_1"/> FROM degree WHERE school in (SELECT schoolName FROM district WHERE leader = #{phone}) AND status = 2
+    </select>
+
+    <select id="getDegreeOfCurrentSchool" useCache="true" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="school_select_1"/> FROM degree WHERE school in (SELECT schoolName FROM district WHERE leader = #{leader}) AND status = 0
+    </select>
+
+    <select id="getDegreeByAddress" resultType="com.school.springboot.entity.Degree">
+        SELECT <include refid="degree_select_1"/> FROM degree WHERE address LIKE "%"#{address}"%"
+    </select>
+
+    <select id="getIdentityByUserName" resultType="java.lang.String">
+        SELECT <include refid="identity_select"/> FROM user WHERE userName = #{userName}
+    </select>
+
+</mapper>

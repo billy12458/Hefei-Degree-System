@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.school.springboot.mapper.RegisterMapper">
+
+    <sql id="user_select_1">
+        phone,password,salt,userName,identity
+    </sql>
+
+    <insert id="registerUser" parameterType="com.school.springboot.entity.User" useGeneratedKeys="false" keyProperty="phone">
+        INSERT INTO user(phone,password,salt,userName,identity) VALUES ()
+    </insert>
+    
+</mapper>

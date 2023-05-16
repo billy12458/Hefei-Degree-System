@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.school.springboot.mapper.UserMapper">
+
+    <sql id="user_select_1">
+        phone,password,salt,userName,identity
+    </sql>
+
+    <!-- <cache eviction="LRU" flushInterval="1200000" readOnly="true" size="512"></cache> -->
+    <!--取别名时，语法为: 数据库字段 as 类属性-->
+
+    <select id="getUserByUserName" resultType="com.school.springboot.entity.User">
+        SELECT <include refid="user_select_1"/> FROM user WHERE userName = #{userName}
+    </select>
+
+    <select id="getUserByPhone" resultType="com.school.springboot.entity.User">
+        SELECT <include refid="user_select_1"/> FROM user WHERE phone = #{phone}
+    </select>
+    
+</mapper>

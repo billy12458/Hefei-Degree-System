@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.school.springboot.mapper.UserMapper">
+
+    <cache eviction="LRU" flushInterval="3000000" size="512" readOnly="false"></cache>
+
+    <sql id="identity_select">
+        password,salt,phone,identity
+    </sql>
+
+    <sql id="identity_select_1">
+        identity
+    </sql>
+
+    <sql id="userinfo_select">
+        phone,username,identity,status
+    </sql>
+
+    <sql id="audit_select">
+        phone,username,status
+    </sql>
+
+    <!-- <select id="selectAllCrossTable" useCache="false" flushCache="false" resultType="com.school.springboot.entity.User">
+        select * from user union select * from user1
+    </select> -->
+
+    <select id="selectAllCrossTable" useCache="false" flushCache="false" resultType="com.school.springboot.entity.User">
+        select * from user union all
+        <foreach collection="list" item="table" separator="union all">
+            select * from ${table}
+        </foreach>
+        <!-- <foreach collection ="list" item="suggestion" separator =",">
+            (#{suggestion.userId},#{suggestion.content},#{suggestion.suggestionId},#{suggetion.commitTime},#{suggestion.completed},#{suggestion.response})
+        </foreach> -->
+    </select>
+
+    <select id="selectByUsername" resultType="com.school.springboot.entity.User">
+        select * from user where username = #{username};
+    </select>
+
+    <select id="selectByPhone" useCache="true" resultType="com.school.springboot.entity.User">
+        select <include refid="identity_select"></include> from user where phone = #{phone};
+    </select>
+
+    <resultMap id="userResultMap" type="com.school.springboot.entity.User">
+        <id property="phone" column="phone"/>
+        <result property="username" column="username"/>
+        <result property="identity" column="identity" javaType="java.lang.Integer"/>
+        <result property="status" column="status"/>
+        <collection property="userLogs" javaType="java.util.ArrayList" column="phone" select="selectLogsByUserName" fetchType="eager" ofType="com.school.springboot.entity.Log">
+            <id property="phone" column="phone"/>
+            <result property="time" column="time" javaType="java.util.Date"/>
+            <result property="event" column="event"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectLogsByUserName" useCache="true" resultType="com.school.springboot.entity.Log">
+        select * from log where phone = #{phone}
+    </select>
+
+    <select id="getIdentityByPhone" useCache="true" resultType="com.school.springboot.entity.User" timeout="3000">
+        select <include refid="identity_select_1"></include> from user where phone = #{phone}
+    </select>
+
+    <select id="getUserInfoByPhone" resultMap="userResultMap" useCache="false" timeout="3000">
+        select <include refid="userinfo_select"/> from user where phone = #{phone}
+    </select>
+
+    <insert id="insUser" flushCache="true" parameterType="com.school.springboot.entity.User" useGeneratedKeys="false" keyProperty="phone">
+        insert into user (phone, password, salt, identity, username, status)
+        values (#{phone},#{password},#{salt},#{identity},#{username},#{status});
+    </insert>
+
+    <update id="updateStatus" statementType="PREPARED" flushCache="true">
+        update user
+        set status = 1
+        where phone = #{phone};
+    </update>
+
+    <select id="selectUserByStatus" useCache="true" fetchSize="100" resultType="com.school.springboot.entity.User">
+        select <include refid="audit_select"></include> from user
+        where status != 1 and identity = 0;
+    </select>
+
+</mapper>

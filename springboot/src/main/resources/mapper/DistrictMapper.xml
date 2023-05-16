@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.school.springboot.mapper.DistrictMapper">
+
+    <sql id="district_select_1">
+        schoolId,district,available,schoolName,leader,total
+    </sql>
+
+    <cache eviction="FIFO" flushInterval="3000000" size="1024" readOnly="false"></cache>
+
+    <insert id="addSchool" flushCache="true" parameterType="com.school.springboot.entity.School" useGeneratedKeys="false" statementType="PREPARED">
+        INSERT IGNORE INTO district VALUES (#{schoolId},#{district},#{available},#{schoolName},#{leader},#{total})
+    </insert>
+
+    <select id="getAllSchools" resultType="com.school.springboot.entity.School">
+        SELECT <include refid="district_select_1"/> FROM district
+    </select>
+
+    <select id="getAllSchoolsInSameDistrict" useCache="false" resultType="com.school.springboot.entity.School">
+        SELECT <include refid="district_select_1"/> FROM district WHERE district = #{district}
+    </select>
+
+    <select id="getSchoolByName" resultType="com.school.springboot.entity.School">
+        SELECT <include refid="district_select_1"/> FROM district WHERE schoolName LIKE "%"#{schoolName}"%"
+    </select>
+
+    <update id="incrementNumberOfDegree" flushCache="true" statementType="PREPARED">
+        UPDATE district set total = total + #{number} WHERE schoolName = #{schoolName}
+    </update>
+
+    <update id="decrementNumberOfDegree" flushCache="true" statementType="PREPARED">
+        UPDATE district set total = total - #{number} WHERE schoolName = #{schoolName}
+    </update>
+
+    <update id="bindLeaderOfSchool" flushCache="true" statementType="PREPARED">
+        UPDATE district set leader = #{leader} WHERE schoolName = #{schoolName}
+    </update>
+
+</mapper>
